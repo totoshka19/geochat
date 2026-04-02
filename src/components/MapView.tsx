@@ -1,4 +1,4 @@
-import Map, { NavigationControl } from 'react-map-gl/maplibre'
+import Map, { NavigationControl, AttributionControl } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setViewport } from '../store/mapSlice'
@@ -18,8 +18,10 @@ export const MapView = () => {
       onMove={(e) => dispatch(setViewport(e.viewState))}
       style={{ width: '100%', height: '100%' }}
       mapStyle={`https://api.maptiler.com/maps/dataviz-dark/style.json?key=${MAPTILER_KEY}`}
+      attributionControl={false}
     >
-      <NavigationControl position="top-right" />
+      <NavigationControl position="top-left" />
+      <AttributionControl position="bottom-left" compact={true} />
       <MarkerLayer />
     </Map>
   )
