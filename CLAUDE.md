@@ -12,7 +12,7 @@
 | Сборка | Vite 6 |
 | Стили | Tailwind CSS 4 |
 | Состояние | Redux Toolkit 2.9 + React-Redux 9 |
-| Карта | Mapbox GL JS 3 + react-map-gl 8 |
+| Карта | MapLibre GL JS 5 + react-map-gl 8 (maplibre) |
 | Кластеры | Supercluster 8 |
 | AI | groq-sdk (Groq API, Llama 3.3 70B, SSE streaming) |
 | Бэкенд | Vercel API Functions (вместо отдельного Express сервера) |
@@ -108,7 +108,7 @@ border-radius: 1rem;
 ## Переменные окружения
 ```env
 # .env (корень проекта — используется и фронтом и Vercel Functions)
-VITE_MAPBOX_TOKEN=pk.your_token_here
+VITE_MAPTILER_KEY=your_maptiler_key_here   # free tier на maptiler.com, только email
 GROQ_API_KEY=gsk_your_key_here
 DATABASE_URL=postgresql://user:pass@host/dbname?sslmode=require
 ```
@@ -128,7 +128,7 @@ DATABASE_URL=postgresql://user:pass@host/dbname?sslmode=require
 |---|---|---|
 | Vercel | Фронтенд + API Functions | Hobby (бесплатно) |
 | Neon | PostgreSQL база данных | Free tier (бесплатно) |
-| Mapbox | Карта и тайлы | Free (до 50к загрузок/мес) |
+| MapTiler | Тайлы карты (dark стиль) | Free (100к/мес, только email) |
 | Groq | LLM API (Llama 3.3 70B) | Free tier (бесплатно) |
 
 ## Что НЕ делать

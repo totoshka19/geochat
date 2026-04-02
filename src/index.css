@@ -82,5 +82,5 @@ html, body, #root {
   animation: fade-up 0.3s ease;
 }
 
-/* Mapbox override — убираем лого (оставляем attribution) */
-.mapboxgl-ctrl-logo { display: none !important; }
+/* MapLibre override */
+.maplibregl-ctrl-logo { display: none !important; }

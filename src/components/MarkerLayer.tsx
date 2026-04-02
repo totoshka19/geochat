@@ -1,4 +1,6 @@
-import { Marker } from 'react-map-gl/mapbox'
+import { Marker, type MarkerEvent } from 'react-map-gl/maplibre'
+
+type MarkerClickEvent = MarkerEvent<MouseEvent>
 import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setLocations, selectLocation } from '../store/mapSlice'
@@ -42,8 +44,8 @@ export const MarkerLayer = () => {
             longitude={loc.longitude}
             latitude={loc.latitude}
             anchor="center"
-            onClick={(e) => {
-              e.originalEvent.stopPropagation()
+            onClick={(e: MarkerClickEvent) => {
+              e.originalEvent?.stopPropagation()
               dispatch(selectLocation(isActive ? null : loc))
             }}
           >

@@ -1,10 +1,10 @@
-import Map, { NavigationControl } from 'react-map-gl/mapbox'
-import 'mapbox-gl/dist/mapbox-gl.css'
+import Map, { NavigationControl } from 'react-map-gl/maplibre'
+import 'maplibre-gl/dist/maplibre-gl.css'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setViewport } from '../store/mapSlice'
 import { MarkerLayer } from './MarkerLayer'
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
+const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY
 
 export const MapView = () => {
   const dispatch = useAppDispatch()
@@ -12,13 +12,12 @@ export const MapView = () => {
 
   return (
     <Map
-      mapboxAccessToken={MAPBOX_TOKEN}
       longitude={viewport.longitude}
       latitude={viewport.latitude}
       zoom={viewport.zoom}
       onMove={(e) => dispatch(setViewport(e.viewState))}
       style={{ width: '100%', height: '100%' }}
-      mapStyle="mapbox://styles/mapbox/dark-v11"
+      mapStyle={`https://api.maptiler.com/maps/dataviz-dark/style.json?key=${MAPTILER_KEY}`}
     >
       <NavigationControl position="top-right" />
       <MarkerLayer />
