@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GeoChat — Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+    * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+
+    /* Симуляция тёмной карты */
+    .map-bg {
+      background-color: #0d1117;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+        radial-gradient(ellipse at 30% 50%, rgba(30, 60, 100, 0.4) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 30%, rgba(20, 50, 80, 0.3) 0%, transparent 50%);
+      background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+    }
+
+    /* Имитация улиц */
+    .street-overlay {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.06) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 2px, transparent 2px),
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 160px 160px, 160px 160px, 40px 40px, 40px 40px;
+      pointer-events: none;
+    }
+
+    /* Диагональные "проспекты" */
+    .street-diagonal {
+      position: absolute; inset: 0;
+      background-image:
+        repeating-linear-gradient(
+          -45deg,
+          transparent,
+          transparent 200px,
+          rgba(255,255,255,0.03) 200px,
+          rgba(255,255,255,0.03) 203px
+        );
+      pointer-events: none;
+    }
+
+    /* Glassmorphism панель */
+    .glass {
+      background: rgba(13, 17, 23, 0.65);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .glass-light {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Маркеры на карте */
+    .marker {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.6);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: absolute;
+    }
+    .marker:hover { transform: scale(1.4); }
+    .marker.active {
+      transform: scale(1.6);
+      box-shadow: 0 0 0 4px rgba(99, 179, 237, 0.3);
+    }
+
+    .marker-pulse::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid rgba(99, 179, 237, 0.4);
+      animation: pulse 2s ease-out infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(2.5); opacity: 0; }
+    }
+
+    /* Tooltip маркера */
+    .marker-tooltip {
+      position: absolute;
+      bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      background: rgba(13, 17, 23, 0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #e2e8f0;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .marker:hover .marker-tooltip { opacity: 1; }
+
+    /* Скроллбар чата */
+    .chat-scroll::-webkit-scrollbar { width: 4px; }
+    .chat-scroll::-webkit-scrollbar-track { background: transparent; }
+    .chat-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+    }
+
+    /* Мигающий курсор */
+    .cursor {
+      display: inline-block;
+      width: 2px; height: 14px;
+      background: #63b3ed;
+      margin-left: 2px;
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* Кнопки управления картой */
+    .map-control-btn {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: rgba(255,255,255,0.6);
+      font-size: 16px;
+      transition: color 0.15s, background 0.15s;
+      border-radius: 6px;
+    }
+    .map-control-btn:hover { color: white; background: rgba(255,255,255,0.08); }
+
+    /* Input */
+    .chat-input {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #e2e8f0;
+      outline: none;
+      transition: border-color 0.2s;
+      resize: none;
+    }
+    .chat-input::placeholder { color: rgba(255,255,255,0.25); }
+    .chat-input:focus { border-color: rgba(99, 179, 237, 0.4); }
+
+    /* Значки категорий */
+    .category-cafe   { background: #ed8936; }
+    .category-park   { background: #48bb78; }
+    .category-museum { background: #9f7aea; }
+    .category-bar    { background: #fc8181; }
+    .category-shop   { background: #63b3ed; }
+
+    /* Fade-in анимация сообщений */
+    .msg-fade { animation: fadeUp 0.3s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hover эффект на маркере активной локации */
+    .location-card {
+      transition: background 0.15s;
+    }
+    .location-card:hover { background: rgba(255,255,255,0.05); }
+  </style>
+</head>
+<body class="overflow-hidden w-screen h-screen">
+
+  <!-- ═══════════════════ КАРТА (фон) ═══════════════════ -->
+  <div class="map-bg absolute inset-0">
+    <div class="street-overlay"></div>
+    <div class="street-diagonal"></div>
+
+    <!-- Маркеры локаций -->
+    <div class="marker category-cafe active marker-pulse" style="left:38%;top:42%">
+      <div class="marker-tooltip">Кофейня на Арбате</div>
+    </div>
+    <div class="marker category-park" style="left:52%;top:35%">
+      <div class="marker-tooltip">Парк Горького</div>
+    </div>
+    <div class="marker category-museum" style="left:44%;top:55%">
+      <div class="marker-tooltip">Третьяковская галерея</div>
+    </div>
+    <div class="marker category-bar" style="left:60%;top:48%">
+      <div class="marker-tooltip">Бар «Дорогая, я перезвоню»</div>
+    </div>
+    <div class="marker category-shop" style="left:33%;top:60%">
+      <div class="marker-tooltip">ТЦ Европейский</div>
+    </div>
+    <div class="marker category-park" style="left:65%;top:28%">
+      <div class="marker-tooltip">Воробьёвы горы</div>
+    </div>
+    <div class="marker category-cafe" style="left:48%;top:62%">
+      <div class="marker-tooltip">Starbucks на Новом Арбате</div>
+    </div>
+    <div class="marker category-museum" style="left:55%;top:58%">
+      <div class="marker-tooltip">Пушкинский музей</div>
+    </div>
+
+    <!-- Кластер -->
+    <div class="absolute flex items-center justify-center cursor-pointer"
+         style="left:70%;top:55%;width:36px;height:36px">
+      <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white"
+           style="background:rgba(99,179,237,0.25);border:2px solid rgba(99,179,237,0.5)">
+        12
+      </div>
+    </div>
+
+    <!-- Атрибуция (как у Mapbox) -->
+    <div class="absolute bottom-2 right-2 text-xs" style="color:rgba(255,255,255,0.2)">
+      © Mapbox · OpenStreetMap
+    </div>
+  </div>
+
+  <!-- ═══════════════════ ЛОГОТИП / ЗАГОЛОВОК ═══════════════════ -->
+  <div class="absolute top-5 left-5 flex items-center gap-2 z-10">
+    <div class="glass rounded-xl px-3 py-2 flex items-center gap-2">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+              fill="rgba(99,179,237,0.9)"/>
+        <circle cx="12" cy="9" r="2.5" fill="#0d1117"/>
+      </svg>
+      <span class="text-white font-semibold text-sm tracking-wide">GeoChat</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ КОНТРОЛЫ КАРТЫ ═══════════════════ -->
+  <div class="absolute top-5 right-[380px] z-10 flex flex-col gap-1">
+    <div class="glass rounded-xl p-1 flex flex-col">
+      <div class="map-control-btn" title="Приблизить">+</div>
+      <div style="height:1px;background:rgba(255,255,255,0.06);margin:2px 4px"></div>
+      <div class="map-control-btn" title="Отдалить">−</div>
+    </div>
+    <div class="glass rounded-xl p-1">
+      <div class="map-control-btn" title="Моё местоположение">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ ЛЕГЕНДА КАТЕГОРИЙ ═══════════════════ -->
+  <div class="absolute bottom-5 left-5 z-10">
+    <div class="glass rounded-xl px-3 py-2 flex items-center gap-3">
+      <div class="flex items-center gap-1.5 text-xs" style="color:rgba(255,255,255,0.5)">
+        <div class="w-2 h-2 rounded-full category-cafe"></div><span>кафе</span>
+      </div>
+      <div class="flex items-center gap-1.5 text-xs" style="color:rgba(255,255,255,0.5)">
+        <div class="w-2 h-2 rounded-full category-park"></div><span>парки</span>
+      </div>
+      <div class="flex items-center gap-1.5 text-xs" style="color:rgba(255,255,255,0.5)">
+        <div class="w-2 h-2 rounded-full category-museum"></div><span>музеи</span>
+      </div>
+      <div class="flex items-center gap-1.5 text-xs" style="color:rgba(255,255,255,0.5)">
+        <div class="w-2 h-2 rounded-full category-bar"></div><span>бары</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ ЧАТ-ПАНЕЛЬ (FLOATING) ═══════════════════ -->
+  <div class="absolute top-0 right-0 h-full z-20 flex flex-col"
+       style="width:360px;padding:16px 16px 16px 0">
+
+    <div class="glass rounded-2xl flex flex-col h-full overflow-hidden"
+         style="border-color:rgba(255,255,255,0.1)">
+
+      <!-- Заголовок панели -->
+      <div class="px-4 pt-4 pb-3" style="border-bottom:1px solid rgba(255,255,255,0.06)">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-green-400" style="box-shadow:0 0 6px #48bb78"></div>
+            <span class="text-sm font-medium" style="color:rgba(255,255,255,0.9)">AI Ассистент</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <button class="map-control-btn text-xs" title="Очистить чат">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+              </svg>
+            </button>
+            <button class="map-control-btn" title="Свернуть">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Выбранная локация -->
+        <div class="location-card rounded-xl px-3 py-2.5 flex items-center gap-3 cursor-pointer"
+             style="background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.2)">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 category-cafe"
+               style="opacity:0.9">
+            ☕
+          </div>
+          <div class="min-w-0">
+            <div class="text-sm font-medium truncate" style="color:#e2e8f0">
+              Кофейня на Арбате
+            </div>
+            <div class="text-xs truncate" style="color:rgba(255,255,255,0.4)">
+              ул. Арбат, 26 · кафе
+            </div>
+          </div>
+          <div class="ml-auto flex-shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="rgba(99,179,237,0.7)" stroke-width="2">
+              <path d="M9 18l6-6-6-6"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Сообщения -->
+      <div class="flex-1 overflow-y-auto chat-scroll px-4 py-4 flex flex-col gap-3">
+
+        <!-- Системное сообщение -->
+        <div class="flex justify-center msg-fade">
+          <div class="text-xs px-3 py-1 rounded-full"
+               style="color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06)">
+            Выбрана локация · Кофейня на Арбате
+          </div>
+        </div>
+
+        <!-- Сообщение пользователя -->
+        <div class="flex justify-end msg-fade">
+          <div class="max-w-[80%] px-3 py-2 rounded-2xl rounded-tr-sm text-sm"
+               style="background:rgba(99,179,237,0.2);border:1px solid rgba(99,179,237,0.25);color:#e2e8f0;line-height:1.5">
+            Расскажи об этом месте подробнее
+          </div>
+        </div>
+
+        <!-- Ответ AI -->
+        <div class="flex gap-2 msg-fade">
+          <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+               style="background:rgba(99,179,237,0.15);border:1px solid rgba(99,179,237,0.3)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(99,179,237,0.9)">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+            </svg>
+          </div>
+          <div class="max-w-[85%] px-3 py-2 rounded-2xl rounded-tl-sm text-sm flex-1"
+               style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);color:#cbd5e0;line-height:1.6">
+            <p>
+              <span style="color:rgba(255,255,255,0.9);font-weight:500">Кофейня на Арбате</span>
+              — уютное место в самом сердце старого Арбата.
+            </p>
+            <p class="mt-2">Здесь отличный Wi-Fi и несколько зон: шумный бар у входа и тихие столики в глубине. Стандартный капучино — 320₽, есть сезонное меню.</p>
+            <p class="mt-2" style="color:rgba(255,255,255,0.5);font-size:11px">Рейтинг 4.6 · работает до 23:00</p>
+          </div>
+        </div>
+
+        <!-- Сообщение пользователя #2 -->
+        <div class="flex justify-end msg-fade">
+          <div class="max-w-[80%] px-3 py-2 rounded-2xl rounded-tr-sm text-sm"
+               style="background:rgba(99,179,237,0.2);border:1px solid rgba(99,179,237,0.25);color:#e2e8f0;line-height:1.5">
+            Есть ли рядом похожие места?
+          </div>
+        </div>
+
+        <!-- Стриминговый ответ AI -->
+        <div class="flex gap-2 msg-fade">
+          <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+               style="background:rgba(99,179,237,0.15);border:1px solid rgba(99,179,237,0.3)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="rgba(99,179,237,0.9)">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+            </svg>
+          </div>
+          <div class="max-w-[85%] px-3 py-2 rounded-2xl rounded-tl-sm text-sm flex-1"
+               style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);color:#cbd5e0;line-height:1.6">
+            Да, в радиусе 500м есть несколько интересных мест<span class="cursor"></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Инпут -->
+      <div class="px-3 pb-3 pt-2" style="border-top:1px solid rgba(255,255,255,0.06)">
+        <div class="flex items-end gap-2">
+          <textarea
+            class="chat-input flex-1 rounded-xl px-3 py-2.5 text-sm"
+            placeholder="Спросите про локацию..."
+            rows="1"
+            style="min-height:40px;max-height:120px;line-height:1.5"
+          ></textarea>
+          <button class="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                  style="background:rgba(99,179,237,0.8);color:#0d1117">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5">
+              <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="text-center mt-2 text-xs" style="color:rgba(255,255,255,0.18)">
+          Claude claude-sonnet-4-6 · GeoChat
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
