@@ -1,14 +1,10 @@
-import { defineConfig, env } from 'prisma/config'
-
-type Env = {
-  DATABASE_URL: string
-  DIRECT_DATABASE_URL: string
-}
+import { defineConfig } from 'prisma/config'
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   datasource: {
-    // Прямое соединение для CLI-операций (db push, migrate, studio)
-    url: env<Env>('DIRECT_DATABASE_URL'),
+    // DIRECT_DATABASE_URL — для локального CLI (db push, seed)
+    // DATABASE_URL — fallback для Vercel build (prisma generate не нуждается в реальном подключении)
+    url: process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL ?? '',
   },
 })
