@@ -150,8 +150,14 @@ export const ChatPanel = () => {
                   : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', color: '#cbd5e0', lineHeight: 1.6 }
                 }
               >
-                {msg.content || (msg.isStreaming ? '' : '...')}
-                {msg.isStreaming && <span className="streaming-cursor" />}
+                {msg.isStreaming && !msg.content
+                  ? <span className="flex items-center gap-1 py-0.5">
+                      <span className="typing-dot" />
+                      <span className="typing-dot" />
+                      <span className="typing-dot" />
+                    </span>
+                  : <>{msg.content}{msg.isStreaming && <span className="streaming-cursor" />}</>
+                }
               </div>
             </div>
           ))}

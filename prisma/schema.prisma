@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Location {
+  id           String  @id @default(cuid())
+  name         String
+  description  String
+  address      String
+  longitude    Float
+  latitude     Float
+  category     String
+  rating       Float?
+  workingHours String?
+
+  @@map("locations")
+}

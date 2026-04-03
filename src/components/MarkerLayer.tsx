@@ -3,9 +3,8 @@ import { Marker, useMap, type MarkerEvent } from 'react-map-gl/maplibre'
 import Supercluster from 'supercluster'
 import type { BBox } from 'geojson'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { setLocations, selectLocation, setViewport } from '../store/mapSlice'
+import { fetchLocations, selectLocation, setViewport } from '../store/mapSlice'
 import type { Location } from '../store/mapSlice'
-import locationsData from '../data/locations.json'
 
 type MarkerClickEvent = MarkerEvent<MouseEvent>
 
@@ -43,7 +42,7 @@ export const MarkerLayer = () => {
   const [zoom, setZoom] = useState(viewport.zoom)
 
   useEffect(() => {
-    dispatch(setLocations(locationsData as Location[]))
+    dispatch(fetchLocations())
   }, [dispatch])
 
   const updateView = useCallback(() => {

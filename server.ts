@@ -2,12 +2,26 @@
 import express from 'express'
 import cors from 'cors'
 import Groq from 'groq-sdk'
+import { PrismaClient } from './generated/prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+const prisma = new PrismaClient({ adapter })
+
+app.get('/api/locations', async (_req, res) => {
+  try {
+    const locations = await prisma.location.findMany({ orderBy: { name: 'asc' } })
+    res.json(locations)
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: 'Failed to fetch locations' })
+  }
+})
 
 app.post('/api/chat', async (req, res) => {
   const { message, locationContext } = req.body as {
