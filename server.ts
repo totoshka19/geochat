@@ -2,21 +2,25 @@
 import express from 'express'
 import cors from 'cors'
 import Groq from 'groq-sdk'
-import { PrismaClient } from './generated/prisma/client'
-import { PrismaPg } from '@prisma/adapter-pg'
+import { Pool } from 'pg'
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
-const prisma = new PrismaClient({ adapter })
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 
 app.get('/api/locations', async (_req, res) => {
   try {
-    const locations = await prisma.location.findMany({ orderBy: { name: 'asc' } })
-    res.json(locations)
+    const { rows } = await pool.query(`
+      SELECT id, name, description, address,
+             longitude::float, latitude::float,
+             category, rating::float, "workingHours"
+      FROM locations
+      ORDER BY name
+    `)
+    res.json(rows)
   } catch (e) {
     console.error(e)
     res.status(500).json({ error: 'Failed to fetch locations' })
