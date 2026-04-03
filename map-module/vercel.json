@@ -1,0 +1,15 @@
+{
+  "installCommand": "cd .. && npm install",
+  "buildCommand": "cd .. && npm run build:map",
+  "outputDirectory": "dist",
+  "framework": null,
+  "headers": [
+    {
+      "source": "/remoteEntry.js",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "no-cache" }
+      ]
+    }
+  ]
+}

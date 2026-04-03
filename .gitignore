@@ -36,6 +36,13 @@ Thumbs.db
 # Vercel
 .vercel
 
+# Module Federation temp files
+.__mf__temp/
+.mf/
+
+# TypeScript build cache
+*.tsbuildinfo
+
 # Prisma
 prisma/*.db
 prisma/*.db-journal

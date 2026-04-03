@@ -1,0 +1,33 @@
+{
+  "name": "map-module",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@geochat/shared-types": "*",
+    "@reduxjs/toolkit": "^2.9.0",
+    "maplibre-gl": "^5.21.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-map-gl": "^8.0.0",
+    "react-redux": "^9.0.0",
+    "supercluster": "^8.0.1"
+  },
+  "devDependencies": {
+    "@module-federation/vite": "^1.0.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/supercluster": "^7.1.3",
+    "@vitejs/plugin-react": "^4.3.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
+  }
+}
